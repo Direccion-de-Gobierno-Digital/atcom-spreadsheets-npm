@@ -1,0 +1,35 @@
+{
+  "name": "atcom-spreadsheets",
+  "version": "0.5.3",
+  "description": "Atcom Spreadsheets Project, a library to query spreadsheets from Google Sheets",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts",
+    "test": "jest --forceExit"
+  },
+  "keywords": [
+    "atcom",
+    "spreadsheets",
+    "query"
+  ],
+  "author": "Periface",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.10",
+    "@types/node": "^20.9.4",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "googleapis": "^128.0.0"
+  }
+}

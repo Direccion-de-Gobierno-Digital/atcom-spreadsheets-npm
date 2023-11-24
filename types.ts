@@ -7,7 +7,8 @@ export type GoogleApiConfig = {
 export type AtcomQueryConfig = {
     credentials: GoogleApiConfig,
     debug?: boolean,
-    schemas: SpreadsheetTableSchema[],
+    schemas?: SpreadsheetTableSchema[],
+    schemasJsonFile?: string
 }
 export type Sheet = {
     uniqueName: string,

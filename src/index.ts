@@ -1,8 +1,16 @@
 import { ArchivosBaseObj, AtcomQueryConfig, GenericObj } from "../types";
 import SheetService, { ISheetService } from "./spreadsheet-service";
+import helpers from "./helpers";
 let _config: AtcomQueryConfig;
 let _sheetService: ISheetService;
 
+/**
+ * Retrieves rows from tables in a spreadsheet.
+ * @param spreadSheet - The name of the spreadsheet.
+ * @param tables - An array of table names.
+ * @param useSmartObject - Optional. Indicates whether to use smart object mapping. Default is true.
+ * @returns A promise that resolves to an object containing the retrieved rows.
+ */
 async function getRowsFromTables(spreadSheet: string, tables: string[], useSmartObject: boolean = true) {
     let response = {} as ArchivosBaseObj;
 
@@ -17,47 +25,60 @@ async function getRowsFromTables(spreadSheet: string, tables: string[], useSmart
             if (!response[table]) {
                 throw new Error(`Table ${table} not found`);
             };
-            response = mapIfRequired(response, useSmartObject, response[table]!.schema.columns);
+            response = helpers.mapIfRequired(response, useSmartObject, response[table]!.schema.columns);
         });
     }
     return response;
 }
 
-function mapIfRequired(response: ArchivosBaseObj, mapIsRequired: boolean, columns: Record<string, number>) {
-    if (mapIsRequired) {
-        for (const key in response) {
-            if (Object.prototype.hasOwnProperty.call(response, key)) {
-                const element = response[key];
-                if (!element) continue;
+/**
+ * Finds an element in a spreadsheet table by column number and ID.
+ *
+ * @param spreadsheet - The name of the spreadsheet.
+ * @param table - The name of the table within the spreadsheet.
+ * @param columnNumber - The column number to search for the element.
+ * @param id - The ID of the element to find.
+ * @param smartObject - Indicates whether to return the element as a smart object.
+ * @returns The found element or an error if not found.
+ * @throws Error if the table or element is not found, or if an unknown error occurs.
+ */
+async function findElementByColumn(spreadsheet: string, table: string, columnNumber: number, id: string, smartObject: boolean) {
 
-                const mappedValues = element.data.map(element => mapPropertiesWithDictionary(element, columns));
-                element.data = mappedValues;
-            }
-        }
+    if (_config.debug) {
+        console.log('Parameters:', spreadsheet, table, columnNumber, id, smartObject)
+        console.log(`[AtcomQueryService] findElementByColumn: ${spreadsheet} - ${table} - ${columnNumber} - ${id} - ${smartObject}`)
     }
-    return response;
-}
-function mapPropertiesWithDictionary(row: string[] | GenericObj, diccionarioColumnas?: Record<string, number>): GenericObj {
 
-    // check if row is genericObj
-    if (!Array.isArray(row)) return row; // no need to map
 
-    const responseObj = {} as GenericObj;
-    for (const key in diccionarioColumnas) {
-        if (Object.prototype.hasOwnProperty.call(diccionarioColumnas, key)) {
-            const index = diccionarioColumnas[key];
-            const value = row[index];
-            responseObj[key] = value;
+    const useSmartObject = smartObject;
+    let spreadSheetLoaderResponse = {} as ArchivosBaseObj;
+    try {
+        spreadSheetLoaderResponse = await _sheetService.cargaRows(spreadsheet, [table]);
+        if (!spreadSheetLoaderResponse[table]) throw new Error(`No se ha encontrado la(s) tabla(s): ${table}`);
+
+        const elemento = helpers.findElementInArray(spreadSheetLoaderResponse[table]!.data, columnNumber, id);
+        if (!elemento?.length) throw new Error(`No se ha encontrado el elemento: ${id}`);
+        let response = elemento;
+        if (useSmartObject) {
+            response = helpers.mapPropertiesWithDictionary(elemento, spreadSheetLoaderResponse[table]!.schema.columns)
         }
+        return response
+    } catch (error) {
+
+        if (_config.debug) console.log("Error", error);
+
+        if (error instanceof Error) throw error;
+        throw new Error("Error desconocido");
     }
-    return responseObj;
 }
+
 
 const AtcomQueryService = (config: AtcomQueryConfig) => {
     _config = config;
     _sheetService = SheetService(_config);
     return {
-        getRowsFromTables
+        getRowsFromTables,
+        findElementByColumn,
     }
 }
 

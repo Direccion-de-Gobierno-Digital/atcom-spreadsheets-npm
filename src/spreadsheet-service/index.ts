@@ -1,7 +1,7 @@
 
 import { ArchivoBaseContent, ArchivosBaseObj, AtcomQueryConfig, SpreadsheetTableSchema } from "../../types";
 import GoogleApi, { IGoogleApi } from "../google-api";
-
+import fs from "fs";
 let googleAppService: IGoogleApi;
 let _config: AtcomQueryConfig;
 let _schemas: AtcomQueryConfig["schemas"];
@@ -86,7 +86,7 @@ async function updateRowAtIndex(spreadsheet: string, table: string, index: numbe
 
 const helpers = {
     findSpreashsheetInSchemas: (spreadSheetName: string) => {
-        const table = _schemas.find(table => table.tableName === spreadSheetName);
+        const table = _schemas?.find(table => table.tableName === spreadSheetName);
         if (!table) {
             throw new Error(`La tabla ${spreadSheetName} no existe en la lista de tablas`);
         }
@@ -117,7 +117,16 @@ export type ISheetService = typeof SheetLoaderService & typeof SheetWritterServi
 const SheetService = (config: AtcomQueryConfig): ISheetService => {
     _config = config;
     googleAppService = GoogleApi(_config.credentials);
-    _schemas = _config.schemas;
+    if (!_config.schemasJsonFile && !_config.schemas) {
+        throw new Error("No se encontró el archivo de configuración de schemas");
+    }
+    if (_config.schemasJsonFile) {
+        // this is a npm package, so we need to use __dirname to get the path
+        const file = fs.readFileSync(`${process.cwd()}/${_config.schemasJsonFile}`, { encoding: "utf-8" });
+        _schemas = JSON.parse(file);
+        console.log("schemas", _schemas);
+    }
+    else _schemas = _config.schemas;
     return {
         ...SheetLoaderService,
         ...SheetWritterService

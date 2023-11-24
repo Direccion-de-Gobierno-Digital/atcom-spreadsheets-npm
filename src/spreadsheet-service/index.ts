@@ -124,7 +124,6 @@ const SheetService = (config: AtcomQueryConfig): ISheetService => {
         // this is a npm package, so we need to use __dirname to get the path
         const file = fs.readFileSync(`${process.cwd()}/${_config.schemasJsonFile}`, { encoding: "utf-8" });
         _schemas = JSON.parse(file);
-        console.log("schemas", _schemas);
     }
     else _schemas = _config.schemas;
     return {

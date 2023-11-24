@@ -61,15 +61,16 @@ function findElementInArrayString(rows: string[][], column: number, value: strin
     return query ? query : undefined;
 }
 
-function findElementsInArray(rows: string[][] | GenericObj[], column: number, value: string) {
+function findElementsInArray(rows: string[][] | GenericObj[], column: number | string, value: string) {
 
     if (isArrayOfStringArray(rows)) {
-        return findElementInArrayString(rows, column, value);
+        return findElementsInArrayString(rows, column as number, value);
     }
-    return findElementsInArrayGenericObj(rows, column, value);
+    return findElementsInArrayGenericObj(rows, column as string, value);
 
 }
-function findElementsInArrayGenericObj(rows: GenericObj[], column: number, value: string) {
+function findElementsInArrayGenericObj(rows: GenericObj[], column: string, value: string) {
+    console.log("findElementsInArrayGenericObj", rows[0]);
     const query = rows.filter((row: GenericObj) => {
         //console.log("Comparando: ", row[column], " con ", value, " = ", row[column] === value, "");
         return row[column] === value;
@@ -85,6 +86,13 @@ function findElementInArraySmartObject(rows: string[][], columnName: string, val
         //console.log("Comparando: ", row[column], " con ", value, " = ", row[column] === value, "");
         return row[columnName] === value;
     })[0];
+    return query ? query : undefined;
+}
+function findElementsInArrayString(rows: string[][], column: number, value: string) {
+    const query = rows.filter((row: string[]) => {
+        //console.log("Comparando: ", row[column], " con ", value, " = ", row[column] === value, "");
+        return row[column] === value;
+    });
     return query ? query : undefined;
 }
 function isArrayOfStringArray(rows: string[][] | GenericObj[]): rows is string[][] {

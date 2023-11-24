@@ -1,6 +1,6 @@
 {
   "name": "atcom-spreadsheets",
-  "version": "0.5.7",
+  "version": "0.5.12",
   "description": "Atcom Spreadsheets Project, a library to query spreadsheets from Google Sheets",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -8,8 +8,12 @@
   "files": [
     "dist"
   ],
+  "bin": {
+    "atcom-spreadsheets": "./dist/cli.js",
+    "atcom-spreadsheets-ta": "./src/cli.ts"
+  },
   "scripts": {
-    "build": "tsup src/index.ts",
+    "build": "tsup src/index.ts src/cli.ts",
     "test": "jest --forceExit",
     "prepublishOnly": "yarn build"
   },

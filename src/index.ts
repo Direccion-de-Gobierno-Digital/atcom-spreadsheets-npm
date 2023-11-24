@@ -3,7 +3,6 @@ import SheetService, { ISheetService } from "./spreadsheet-service";
 import helpers from "./helpers";
 let _config: AtcomQueryConfig;
 let _sheetService: ISheetService;
-
 /**
  * Retrieves rows from tables in a spreadsheet.
  * @param spreadSheet - The name of the spreadsheet.
@@ -72,13 +71,36 @@ async function findElementByColumn(spreadsheet: string, table: string, columnNum
     }
 }
 
+async function queryRowsFromTable(spreadsheet: string, tabla: string, columnId: number, value: string, mapIsRequired = false) {
+    if (_config.debug) {
+        console.log('Parameters:', spreadsheet, tabla, columnId, value, mapIsRequired)
+        console.log(`[AtcomQueryService] getRowsFromTableQuery: ${spreadsheet} - ${tabla} - ${columnId} - ${value} - ${mapIsRequired}`)
+    }
+    const response = {
+        [tabla]: {
+            data: [],
+            schema: {
+                columns: []
+            }
+        }
+    } as unknown as ArchivosBaseObj;
+    const data = await getRowsFromTables(spreadsheet, [tabla], false);
+    if (!data[tabla] || !data[tabla] === undefined) throw new Error(`Google: No se ha encontrado la tabla: ${tabla}`);
+    const filteredValues = helpers.findElementsInArray(data[tabla]!.data, columnId, value);
+    if (!filteredValues) throw new Error(`No se ha encontrado el elemento: ${value}`);
+
+    response[tabla]!.data = filteredValues;
+    return helpers.mapIfRequired(response, mapIsRequired, data[tabla]!.schema.columns);
+}
 
 const AtcomQueryService = (config: AtcomQueryConfig) => {
     _config = config;
     _sheetService = SheetService(_config);
+
     return {
         getRowsFromTables,
         findElementByColumn,
+        queryRowsFromTable
     }
 }
 

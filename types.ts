@@ -28,8 +28,8 @@ export type SpreadsheetTableSchema = {
         sheets: Sheet[]
     },
 }
-export type ArchivoBaseContent = {
-    data: string[][] | GenericObj[];
+export type ArchivoBaseContent<T> = {
+    data: string[][] | T[];
     schema: Sheet;
 }
-export type ArchivosBaseObj = Record<string, ArchivoBaseContent>
+export type ArchivosBaseObj<T> = Record<string, ArchivoBaseContent<T>>

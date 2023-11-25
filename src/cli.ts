@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import { program } from 'commander';
-import { Sheet, SpreadsheetTableSchema } from '../types';
+import { SpreadsheetTableSchema } from '../types';
 import { env } from 'process';
 
 let schemas = [] as SpreadsheetTableSchema[];
@@ -11,18 +11,25 @@ program.name('atcom-spreadsheets-util')
     .version('0.5.13');
 
 
-program.command('generate-types').description('Create types from spreadsheets').action(createTableTypes);
+program.command('generate-types').argument('<folder>', 'Folder where types will be created').description('Create types from spreadsheets').action(createTableTypes);
 
 program.command('generate-names').description('Create names from spreadsheets').action(createTableNames);
 
-program.command('generate').description('Create types and names from spreadsheets').action(() => {
-    createTableTypes();
+program.command('generate').description('Create types and names from spreadsheets').action((args) => {
+    createTableTypes(args);
     createTableNames();
 });
 
-function createTableTypes() {
+function createTableTypes(args: string) {
+    let folder = args;
+
+    if (folder === undefined || folder === '') folder = '/spreadsheet-types';
+
+    //if folder doesnt start with / add it
+    if (!folder.startsWith('/')) folder = `/${folder}`;
+
     loadSchemasJsonFile();
-    createTypesInSingleFile(schemas);
+    createTypesInSingleFile(schemas, folder);
 
 }
 
@@ -31,30 +38,30 @@ function formatTypeName(name: string) {
     return name.replace(/[^a-zA-Z0-9]/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('').replace(/\s/g, '');
 }
 
-function createTypesInSingleFile(schemas: SpreadsheetTableSchema[]) {
+function createTypesInSingleFile(schemas: SpreadsheetTableSchema[], folder = '/spreadsheet-types') {
     // check all schemas and create types in a single file for each sheet
     const types = schemas.map(schema => {
         const columns = schema.location.sheets.map(sheet => sheet.columns);
-        console.log(columns)
+
         // columns is a record <string, number> where the key is the column name and type value is always string
-        const typeFile = `export type ${formatTypeName(schema.tableName)} = {\n${columns.map((value, danumber) => {
-
-            const name = Object.keys(value)[danumber];
-            console.log(name)
-            return `    ${name}: string,`
-        }).join(',\n')}\n}`;
-
+        let typeFile = `export type ${formatTypeName(schema.tableName)} = `;
+        typeFile += '{ ';
+        columns.forEach(column => {
+            // get string values from columns
+            // get key values from columns
+            const keys = Object.keys(column);
+            // keys are the property names of the type
+            keys.forEach(key => {
+                typeFile += `${key}: string;`;
+            });
+        });
+        typeFile += '};';
         return typeFile;
     });
-
-    const folderLocation = `${process.cwd()}/types`;
-
+    const folderLocation = `${process.cwd()}${folder}`;
     // create folder if not exists
     fs.mkdirSync(folderLocation, { recursive: true });
-    fs.writeFileSync(`${folderLocation}/types.ts`, types.join('\n'));
-
-
-
+    fs.writeFileSync(`${folderLocation}/index.ts`, types.join('\n'));
 }
 
 function createTypesForEachSheet(schemas: SpreadsheetTableSchema[]) {

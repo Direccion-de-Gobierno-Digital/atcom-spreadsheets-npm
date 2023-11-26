@@ -1,6 +1,6 @@
 {
   "name": "atcom-spreadsheets",
-  "version": "0.5.161",
+  "version": "0.5.162",
   "description": "Atcom Spreadsheets Project, a library to query spreadsheets from Google Sheets",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

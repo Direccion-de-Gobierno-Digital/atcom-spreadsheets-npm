@@ -7,7 +7,7 @@ let _config: AtcomQueryConfig;
 let _schemas: AtcomQueryConfig["schemas"];
 
 
-const cargaRows = async (spreadsheet: string, tables: string[] | string) => {
+const cargaRows = async<T>(spreadsheet: string, tables: string[] | string) => {
     if (typeof tables === "string") {
         tables = [tables];
     }
@@ -16,11 +16,11 @@ const cargaRows = async (spreadsheet: string, tables: string[] | string) => {
 
     if (!spreadSheetSchema) { throw new Error(`No se encontró el spreadsheet ${spreadsheet} en la lista de tablas`); }
 
-    const result = {} as ArchivosBaseObj;
+    const result = {} as ArchivosBaseObj<T>;
     await Promise.all(tables.map(async (table, index) => {
         const sheet = helpers.findTableInSpreadsheetSchema(spreadSheetSchema, table);
         if (result[table] === undefined) {
-            result[table] = {} as ArchivoBaseContent;
+            result[table] = {} as ArchivoBaseContent<T>;
         }
         const location = spreadSheetSchema.location;
         const data = await googleAppService.getGoogleSheetData(location.id, sheet.namedRange);
